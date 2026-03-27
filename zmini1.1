@@ -1,0 +1,145 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include "chess.hpp"
+
+using namespace chess;
+
+// --- 1. EVALUATION DATA ---
+// Basic material values
+const int PIECE_VALUES[] = {0, 100, 300, 320, 500, 900, 20000};
+
+// A "Piece-Square Table" for Pawns and Knights. 
+// It encourages the engine to control the center.
+const int pawn_pst[64] = {
+    0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+     5,  5, 10, 25, 25, 10,  5,  5,
+     0,  0,  0, 20, 20,  0,  0,  0,
+     5, -5,-10,  0,  0,-10, -5,  5,
+     5, 10, 10,-20,-20, 10, 10,  5,
+     0,  0,  0,  0,  0,  0,  0,  0
+};
+
+// --- 2. EVALUATION FUNCTION ---
+int evaluate(Board& board) {
+    int score = 0;
+    for (int i = 0; i < 64; i++) {
+        Square sq = static_cast<Square>(i);
+        Piece p = board.at(sq);
+        if (p != Piece::NONE) {
+            int type = static_cast<int>(p.type());
+            int val = PIECE_VALUES[type];
+            
+            // Add positional bonus for pawns
+            if (p.type() == PieceType::PAWN) {
+                val += (p.color() == Color::WHITE) ? pawn_pst[i] : pawn_pst[63 - i];
+            }
+
+            score += (p.color() == Color::WHITE) ? val : -val;
+        }
+    }
+    return score;
+}
+
+// --- 3. SEARCH (Alpha-Beta) ---
+int search(Board& board, int depth, int alpha, int beta, bool maximizing) {
+    // FIX: Check .first for GameResultReason
+    if (board.isGameOver().first != GameResultReason::NONE) {
+        if (board.isGameOver().second == GameResult::WIN) return 100000 + depth;
+        if (board.isGameOver().second == GameResult::LOSE) return -100000 - depth;
+        return 0; // Draw
+    }
+    
+    if (depth == 0) return evaluate(board);
+
+    Movelist moves;
+    movegen::legalmoves(moves, board);
+
+    if (maximizing) {
+        int maxEval = -1000000;
+        for (auto move : moves) {
+            board.makeMove(move);
+            int eval = search(board, depth - 1, alpha, beta, false);
+            board.unmakeMove(move);
+            maxEval = std::max(maxEval, eval);
+            alpha = std::max(alpha, eval);
+            if (beta <= alpha) break;
+        }
+        return maxEval;
+    } else {
+        int minEval = 1000000;
+        for (auto move : moves) {
+            board.makeMove(move);
+            int eval = search(board, depth - 1, alpha, beta, true);
+            board.unmakeMove(move);
+            minEval = std::min(minEval, eval);
+            beta = std::min(beta, eval);
+            if (beta <= alpha) break;
+        }
+        return minEval;
+    }
+}
+
+// --- 4. UCI ENGINE PROTOCOL ---
+void uci_loop() {
+    Board board;
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        if (line == "uci") {
+            std::cout << "id name Z-Mini\nid author Gemini\nuciok" << std::endl;
+        } else if (line == "isready") {
+            std::cout << "readyok" << std::endl;
+        } else if (line.substr(0, 8) == "position") {
+            if (line.find("startpos") != std::string::npos) {
+                board = Board();
+            }
+            if (line.find("moves") != std::string::npos) {
+                size_t pos = line.find("moves") + 6;
+                std::string all_moves = line.substr(pos);
+                std::string move_str;
+                size_t start = 0, end = 0;
+                board = Board(); // Re-simulate from start to ensure accuracy
+                while ((end = all_moves.find(' ', start)) != std::string::npos) {
+                    board.makeMove(uci::uciToMove(board, all_moves.substr(start, end - start)));
+                    start = end + 1;
+                }
+                if (start < all_moves.size()) 
+                    board.makeMove(uci::uciToMove(board, all_moves.substr(start)));
+            }
+        } else if (line.substr(0, 2) == "go") {
+            Movelist moves;
+            movegen::legalmoves(moves, board);
+            if (moves.size() == 0) continue;
+
+            Move bestMove = moves[0];
+            bool isWhite = (board.sideToMove() == Color::WHITE);
+            int bestScore = isWhite ? -1000000 : 1000000;
+
+            for (auto move : moves) {
+                board.makeMove(move);
+                // Search depth 4 is a good balance for simple Minimax
+                int score = search(board, 4, -1000000, 1000000, !isWhite);
+                board.unmakeMove(move);
+
+                if (isWhite && score > bestScore) {
+                    bestScore = score;
+                    bestMove = move;
+                } else if (!isWhite && score < bestScore) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+            std::cout << "bestmove " << uci::moveToUci(bestMove) << std::endl;
+        } else if (line == "quit") {
+            break;
+        }
+    }
+}
+
+int main() {
+    uci_loop();
+    return 0;
+}
