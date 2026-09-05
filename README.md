@@ -6,12 +6,21 @@
 
 **Created by Sreedhayan (CN)**
 
-[![Language](https://img.shields.io/badge/C%2B%2B-17%2B-00599C?style=for-the-badge\&logo=cplusplus\&logoColor=white)](https://isocpp.org/)
+[![Website](https://img.shields.io/badge/Website-zenot--chess--engine.netlify.app-00AEEF?style=for-the-badge)](https://zenot-chess-engine.netlify.app/)
+[![Language](https://img.shields.io/badge/C%2B%2B-17%2B-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)](https://isocpp.org/)
 [![License](https://img.shields.io/badge/License-BSD--3--Clause-8A2BE2?style=for-the-badge)](LICENSE)
 [![Protocol](https://img.shields.io/badge/Protocol-UCI-111111?style=for-the-badge)](https://www.chessprogramming.org/UCI)
 [![Status](https://img.shields.io/badge/Status-Experimental-8B5CF6?style=for-the-badge)](#status)
 
 </div>
+
+---
+
+## Website
+
+The project website is available at: https://zenot-chess-engine.netlify.app/
+
+Visit the site for demos, documentation, or a hosted interface (when available).
 
 ---
 
@@ -37,7 +46,7 @@ The project is intentionally small, making the underlying engine logic easy to i
 
 ---
 
-## ⚙️ Current Engine Architecture
+# ⚙️ Current Engine Architecture
 
 The current implementation follows a straightforward pipeline:
 
@@ -349,5 +358,7 @@ See [`LICENSE`](LICENSE) for the complete license text.
 **Small codebase. Classical search. Real chess-engine logic.**
 
 Built by **Sreedhayan (CN)** ♟️
+
+Project website: https://zenot-chess-engine.netlify.app/
 
 </div>
