@@ -359,6 +359,6 @@ See [`LICENSE`](LICENSE) for the complete license text.
 
 Built by **Sreedhayan (CN)** ♟️
 
-Project website: https://zenot-chess-engine.netlify.app/
+Project website(please check it out): https://zenot-chess-engine.netlify.app/
 
 </div>
